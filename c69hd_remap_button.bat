@@ -1,13 +1,13 @@
 @echo off
 setlocal enabledelayedexpansion
-title Onyx Boox Faust 5 (C69HD) Button Remapper
+title Onyx Boox C69HD Button Remapper
 
 echo ======================================================================
-echo           Onyx Boox Faust 5 (C69HD) Hardware Button Remapper
+echo                Onyx Boox C69HD Hardware Button Remapper
 echo ======================================================================
-echo This script configures the physical center button on Onyx Boox Faust 5
-echo (C69HD) devices. By default, long-pressing this button attempts to
-echo toggle nonexistent frontlight and throws an error toast.
+echo This script configures the physical center button on Onyx Boox C69HD
+echo devices. By default, long-pressing this button attempts to toggle
+echo nonexistent frontlight and throws an error toast.
 echo.
 echo This tool remaps the button natively in the Onyx framework.
 echo ======================================================================
@@ -153,8 +153,9 @@ echo [NOTE regarding Double-Press & Screen-Wake]:
 echo * Double-Press: Onyx ROM natively supports Short and Long press.
 echo   For true 3-way multi-press (single, double, hold), install the
 echo   open-source 'Key Mapper' app (see README.md).
-echo * Screen Wake: Android framework/kernel blocks KEY_BACK wake when asleep.
-echo   Wake via the top Power button or a magnetic smart cover (Hall sensor).
+echo * Screen Wake & DT2W: Physical button wake (center and side page-turn keys)
+echo   and Double Tap to Wake are available via the 'c69hd-wake' Magisk module.
+echo   See the magisk/ directory in this repo for full installation instructions.
 echo ======================================================================
 echo.
 pause

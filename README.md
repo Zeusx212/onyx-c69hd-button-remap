@@ -1,18 +1,21 @@
-# Onyx Boox Faust 5 (C69HD) Hardware Button Remapper
+# Onyx Boox C69HD Hardware Button Remapper & Screen Wake
 
-A lightweight, permanent utility to configure and remap the physical center front hardware button on Onyx Boox devices (specifically the **Onyx Boox Faust 5 / C69HD / Board C69_M_STAR**).
+A complete utility suite to configure, remap, and enable hardware screen wake on the **Onyx Boox C69HD** (Board `C69_M_STAR`, Qualcomm SM6225 / Bengal, Android 11).
 
 ---
 
-## 🔍 The Problem
-On the non-backlit edition of the Onyx Boox Faust 5, the physical center front button acts as `BACK` on short-press, but its long-press action is hardcoded in the ROM's `framework-res.apk` (`res/raw/keypad.json`) to `"toggleFrontLight"`. 
+## 🔍 The Problem on C69HD
+On the Onyx Boox C69HD, the physical center front button acts as `BACK` on short-press, but its long-press action is hardcoded in the ROM's `framework-res.apk` (`res/raw/keypad.json`) to `"toggleFrontLight"`. 
 
-Because this hardware edition has no frontlight LEDs, holding the button triggers an error toast across the screen:
+Because this hardware edition has no frontlight LEDs, holding the button triggers an error toast:
 > *"doesn't support frontlight"*
 
+Additionally, the physical buttons and double-tap touch gestures do not wake the screen from sleep on stock firmware.
+
 ---
 
-## 🛠️ How It Works
+## 🛠️ Part 1: Hardware Button Remapping (No Root Required)
+
 Onyx’s system framework contains an internal key mapping manager (`android.onyx.util.KeyboardEntryMap` running inside `system_server`). Before falling back to the hardcoded `keypad.json`, it queries Android’s `Settings.Global` for key overrides matching `KEYCODE_BACK`.
 
 By injecting a JSON override into `Settings.Global KEYCODE_BACK` and sending the framework reload broadcast `onyx.action.refresh_keymapping`, both **Short-Press (Tap)** and **Long-Press (Hold)** can be customized:
@@ -20,38 +23,13 @@ By injecting a JSON override into `Settings.Global KEYCODE_BACK` and sending the
 - **No Battery Drain**: Handled natively in the OS window manager (`system_server`), requiring no persistent accessibility services or background keylogger apps.
 - **Persistent**: Survives device reboots.
 
----
-
-## ⚡ Quick Start (ADB One-Liner)
-
-With USB Debugging enabled on your device:
-
-### Remap Long-Press to Recent Apps & Short-Press to Back (Default):
+### Quick Start (ADB One-Liner):
 ```sh
 adb shell "settings put global KEYCODE_BACK '{\"keySet\":[\"KEYCODE_BACK\"],\"shortPressAction\":\"\",\"longPressAction\":\"KEYCODE_APP_SWITCH\",\"repeat\":false}'"
 adb shell am broadcast -a onyx.action.refresh_keymapping
 ```
 
-### Directly on Device (Termux / Local Shell):
-```sh
-settings put global KEYCODE_BACK '{"keySet":["KEYCODE_BACK"],"shortPressAction":"","longPressAction":"KEYCODE_APP_SWITCH","repeat":false}'
-am broadcast -a onyx.action.refresh_keymapping
-```
-
----
-
-## 📂 Included Scripts
-
-| Script | Platform | Description |
-|---|---|---|
-| `c69hd_remap_button.bat` | Windows | Double-click interactive batch wizard (remap Long-Press & Short-Press) |
-| `c69hd_remap_button.sh` | Linux / macOS / Termux | Interactive shell script (remap Long-Press & Short-Press) |
-| `c69hd_remap_button.py` | Cross-Platform | Interactive Python CLI (remap Long-Press & Short-Press) |
-
----
-
-## 🎯 Supported Native Actions
-
+### Supported Native Actions:
 | Action | ID | Behavior |
 |---|---|---|
 | **Recent Apps** | `KEYCODE_APP_SWITCH` | Opens the multitasking / Recent Apps overview (Default for Hold) |
@@ -65,42 +43,46 @@ am broadcast -a onyx.action.refresh_keymapping
 
 ---
 
-## 💡 Double-Press Remapping
+## ⚡ Part 2: Hardware Screen Wake & Double Tap to Wake (Root / Magisk)
 
-### Native ROM Limitations:
-Onyx's internal framework (`android.onyx.util.KeyboardEntry`) natively supports two press states:
-- `shortPressAction` (Single click / tap)
-- `longPressAction` (Hold down)
+Stock Onyx ROMs have `config_wakeOnBackKeyPress` hardcoded to `false` in `framework-res.apk`, meaning physical buttons cannot wake the device from sleep.
 
-There is **no native double-press handler** in Onyx's ROM or AOSP's Back key pipeline.
+The included **`c69hd-wake`** Magisk module solves this:
+- **Center Button Wake**: Pressing the center button while asleep wakes the device instantly (< 30ms).
+- **Side Page-Turn Button Wake**: Pressing either page-turn button while asleep also wakes the device.
+- **Double Tap to Wake (DT2W)**: Double-tapping the touchscreen while asleep wakes the screen.
+- **Full Compatibility**: When the device is awake, button events pass through normally to Onyx ROM, preserving all single-press and long-press custom mappings.
 
-### Solution for Double-Press (3-Way Mapping):
-To have **three distinct actions** on the single physical button (e.g. Single-Tap = Back, Double-Tap = E-Ink Refresh, Hold = Recent Apps), use the open-source **[Key Mapper](https://github.com/keymapperorg/KeyMapper)** app:
-
-1. Download and install **Key Mapper** (free, open source on F-Droid or GitHub Releases).
-2. Enable Key Mapper in **Settings > Accessibility**.
-3. Create a new trigger:
-   - Record Trigger: Press the physical center button (`Back`).
-   - Trigger Type: Set to **Double Press** (or Single / Long press).
-   - Action: Select your desired action (e.g., Open App, Screenshot, Split Screen, etc.).
-4. When using Key Mapper for double-press, you can leave the native tool configured with Single-Tap as Back and Long-Press as Recent Apps.
+### Installing the Magisk Module:
+Flash [`magisk/c69hd-wake.zip`](magisk/c69hd-wake.zip) in the Magisk app or via root ADB:
+```sh
+adb push magisk/c69hd-wake.zip /data/local/tmp/
+adb shell su -c "/data/adb/magisk/magisk --install-module /data/local/tmp/c69hd-wake.zip"
+adb reboot
+```
+See [`magisk/README.md`](magisk/README.md) for full technical documentation.
 
 ---
 
-## ⚡ Screen Wake (Wake on Button Press)
+## 💡 Double-Press Remapping (3-Way Mapping)
 
-### Technical Analysis & Limitations:
-- The center physical button is mapped to `qpnp_pon` (Qualcomm PMIC power-on chip) at `/dev/input/event0` with Linux keycode `158` (`KEY_BACK`).
-- In `/system/usr/keylayout/Generic.kl`, line 158 is configured as `key 158 BACK` (lacking the `WAKE` flag, unlike `key 116 POWER WAKE`).
-- In Android's window manager policy (`PhoneWindowManager.isWakeKeyWhenScreenOff`), waking on `KEYCODE_BACK` is gated by `config_wakeOnBackKeyPress`, which is hardcoded to `false` in `/system/framework/framework-res.apk`.
-- Because the device runs a non-rooted production build with read-only dm-verity partitions (`/system`), `Generic.kl` and `framework-res.apk` cannot be altered.
+Onyx's internal framework natively handles two states: `shortPressAction` (tap) and `longPressAction` (hold).
 
-### Available Screen Wake Methods on Faust 5 (C69HD):
-Because the capacitive touch digitizer and center button are powered down during sleep to preserve battery life, only two wake methods are supported by hardware:
-1. **Physical Power Button**: The top button (`qpnp_pon` key 116) is the primary hardware wake key.
-2. **Magnetic Smart Cover**: Opening a compatible magnetic folio cover activates the built-in Hall sensor (`onyx-hall`), which automatically wakes the device via `KEY_WAKEUP`.
+To assign a **third distinct action** to double-press (e.g. Single-Tap = Back, Double-Tap = E-Ink Refresh, Hold = Recent Apps), use the open-source **[Key Mapper](https://github.com/keymapperorg/KeyMapper)** app:
+1. Install **Key Mapper** (free from F-Droid or GitHub Releases).
+2. Enable Key Mapper in **Settings > Accessibility**.
+3. Create a trigger on `Back` set to **Double Press** and choose your desired action.
 
-*(Note: Although Android's `Settings.Secure` database contains a residual `double_tap_to_wake=1` flag from AOSP defaults or cloud backup, `mSupportsDoubleTapWakeConfig` and the FocalTech touch gesture driver `fts_ts` (`Reg(0xD0)=0`) are disabled in the ROM to prevent battery drain).*
+---
+
+## 📂 Included Scripts
+
+| Script | Platform | Description |
+|---|---|---|
+| `c69hd_remap_button.bat` | Windows | Interactive batch wizard (remap Long-Press & Short-Press) |
+| `c69hd_remap_button.sh` | Linux / macOS / Termux | Interactive shell script (remap Long-Press & Short-Press) |
+| `c69hd_remap_button.py` | Cross-Platform | Interactive Python CLI (remap Long-Press & Short-Press) |
+| `magisk/c69hd-wake.zip` | Android (Magisk) | Flashable Magisk module for Button Wake & DT2W |
 
 ---
 

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Onyx Boox Faust 5 (C69HD) Hardware Button Remapper
+Onyx Boox C69HD Hardware Button Remapper
 Cross-platform tool to configure the physical center hardware button on Onyx devices.
 """
 
@@ -43,7 +43,7 @@ def display_menu(title, default_key):
 
 def main():
     print("=" * 70)
-    print("       Onyx Boox Faust 5 (C69HD) Hardware Button Remapper")
+    print("            Onyx Boox C69HD Hardware Button Remapper")
     print("=" * 70)
 
     # Check device connection
@@ -100,9 +100,9 @@ def main():
     print("• Double-Press: Onyx ROM natively supports Short & Long press.")
     print("  To enable true 3-way multi-press (single, double, hold), install the")
     print("  open-source 'Key Mapper' app (see README.md for details).")
-    print("• Screen Wake: Android kernel/framework blocks waking from sleep via")
-    print("  KEY_BACK on non-root builds. Wake via the top Power button or a")
-    print("  magnetic smart cover (Hall sensor).")
+    print("• Screen Wake & DT2W: Physical button wake (center and side page-turn keys)")
+    print("  and Double Tap to Wake are available via the 'c69hd-wake' Magisk module.")
+    print("  See the magisk/ directory in this repo for full installation instructions.")
     print("=" * 70)
 
 if __name__ == "__main__":
