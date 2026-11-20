@@ -9,13 +9,13 @@ import sys
 import json
 
 ACTIONS = {
-    "1": ("Recent Apps (Overview)", "KEYCODE_APP_SWITCH"),
-    "2": ("Full Screen E-Ink Refresh", "fullRefreshScreen"),
+    "1": ("Recent Apps (Overview / App Switcher)", "KEYCODE_APP_SWITCH"),
+    "2": ("Full Screen E-Ink Refresh (Clears ghosting)", "fullRefreshScreen"),
     "3": ("Take Screenshot", "screenshot"),
     "4": ("Open E-Ink Refresh Mode Dialog", "showRefreshModeDialog"),
     "5": ("Return to Home Screen", "back_to_home"),
     "6": ("Toggle A2 Speed Refresh Mode", "toggleA2"),
-    "7": ("Disable Long-Press (No action, no error toast)", ""),
+    "7": ("Standard Back Key Event", ""),
     "8": ("Revert to Factory Default (Frontlight toggle)", "toggleFrontLight"),
 }
 
@@ -30,10 +30,21 @@ def run_adb(args):
         print(f"[ERROR] ADB command failed: {e.stderr.strip()}")
         sys.exit(1)
 
+def display_menu(title, default_key):
+    print(f"\n--- {title} ---")
+    for key, (label, action) in ACTIONS.items():
+        suffix = " [Recommended]" if key == default_key else ""
+        print(f"  [{key}] {label}{suffix}")
+    choice = input(f"\nEnter choice [1-8, Default: {default_key}]: ").strip() or default_key
+    if choice not in ACTIONS:
+        print(f"Invalid choice '{choice}'. Defaulting to [{default_key}].")
+        choice = default_key
+    return ACTIONS[choice]
+
 def main():
-    print("=" * 66)
+    print("=" * 70)
     print("       Onyx Boox Faust 5 (C69HD) Hardware Button Remapper")
-    print("=" * 66)
+    print("=" * 70)
 
     # Check device connection
     devices_out = run_adb(["devices"])
@@ -44,42 +55,55 @@ def main():
         sys.exit(1)
 
     print("[OK] Device connected!\n")
-    print("Choose what you want the physical button LONG-PRESS to do:\n")
-    for key, (label, action) in ACTIONS.items():
-        suffix = " [Default]" if key == "1" else ""
-        print(f"  [{key}] {label}{suffix}")
+    print("Configure physical button actions (Tap & Hold):")
 
-    choice = input("\nEnter choice [1-8, Default: 1]: ").strip() or "1"
-    if choice not in ACTIONS:
-        print(f"Invalid choice '{choice}'. Defaulting to Recent Apps (1).")
-        choice = "1"
+    # 1. Long Press action (Hold)
+    lp_label, lp_action = display_menu("1. Choose LONG-PRESS (Hold) Action", "1")
 
-    label, action = ACTIONS[choice]
-    print(f"\n[*] Applying: {label} ({action})...")
+    # 2. Short Press action (Tap)
+    sp_label, sp_action = display_menu("2. Choose SHORT-PRESS (Single Tap) Action", "7")
+
+    print("\n[*] Applying configuration...")
 
     payload = {
         "keySet": ["KEYCODE_BACK"],
-        "shortPressAction": "",
-        "longPressAction": action,
+        "shortPressAction": sp_action,
+        "longPressAction": lp_action,
         "repeat": False
     }
     json_str = json.dumps(payload, separators=(',', ':'))
 
-    # Put setting and broadcast reload
-    run_adb(["shell", "settings", "put", "global", "KEYCODE_BACK", json_str])
+    # Set Global settings
+    run_adb(["shell", f"settings put global KEYCODE_BACK '{json_str}'"])
+    
+    # If short press is customized (not standard back), enable short press flag
+    if sp_action:
+        run_adb(["shell", "settings put global key_custom_side_key_short_press_enable 1"])
+    else:
+        run_adb(["shell", "settings put global key_custom_side_key_short_press_enable 0"])
+
+    # Broadcast reload to Onyx framework
     run_adb(["shell", "am", "broadcast", "-a", "onyx.action.refresh_keymapping"])
 
     # Verify
     saved = run_adb(["shell", "settings", "get", "global", "KEYCODE_BACK"])
 
-    print("=" * 66)
+    print("=" * 70)
     print("[SUCCESS] Hardware button remapped successfully!")
     print(f"\nActive Configuration in Settings.Global:")
     print(f"  {saved}\n")
-    print("• Tap: Standard Back")
-    print(f"• Hold: {label}")
-    print("• Persistent: Survives device reboots.")
-    print("=" * 66)
+    print(f"• Single Tap : {sp_label}")
+    print(f"• Long Press : {lp_label}")
+    print("• Persistent : Survives device reboots.")
+    print("=" * 70)
+    print("\n[NOTE regarding Double-Press & Screen-Wake]:")
+    print("• Double-Press: Onyx ROM natively supports Short & Long press.")
+    print("  To enable true 3-way multi-press (single, double, hold), install the")
+    print("  open-source 'Key Mapper' app (see README.md for details).")
+    print("• Screen Wake: Android kernel/framework blocks waking from sleep via")
+    print("  KEY_BACK on non-root builds. Use the Power button or the built-in")
+    print("  touchscreen 'Double-Tap to Wake' gesture to wake the device.")
+    print("=" * 70)
 
 if __name__ == "__main__":
     main()

@@ -2,9 +2,8 @@
 # ==============================================================================
 # Onyx Boox Faust 5 (C69HD) Hardware Button Remapper
 #
-# Fixes the physical center button on non-backlit Onyx Boox Faust 5 (C69HD)
-# devices. By default, long-pressing this button attempts to toggle frontlight,
-# which triggers the error toast: "doesn't support frontlight".
+# Configures the physical center button on Onyx Boox Faust 5 (C69HD) devices.
+# Remaps Short-Press (Tap) and Long-Press (Hold) natively in the Onyx framework.
 #
 # Can be run directly from a host PC via ADB, OR pushed directly to the device
 # and executed inside the Android shell / Termux.
@@ -30,59 +29,83 @@ else
     fi
 fi
 
-ACTION="$1"
+echo "======================================================================"
+echo "          Onyx Boox Faust 5 (C69HD) Hardware Button Remapper"
+echo "======================================================================"
+echo ""
+echo "--- 1. Choose LONG-PRESS (Hold) Action ---"
+echo "  1) Recent Apps / App Switcher (Recommended)"
+echo "  2) Full Screen E-Ink Refresh (Clears ghosting)"
+echo "  3) Take Screenshot"
+echo "  4) Open E-Ink Refresh Mode Dialog"
+echo "  5) Return to Home Screen"
+echo "  6) Toggle A2 Fast Refresh Mode"
+echo "  7) Standard Back (No Long-Press Action)"
+echo "  8) Revert to Factory Default (Frontlight toggle)"
+echo ""
+read -r -p "Enter choice [1-8, Default: 1]: " LP_CHOICE
+LP_CHOICE="${LP_CHOICE:-1}"
 
-if [ -z "$ACTION" ]; then
-    echo "======================================================================"
-    echo "          Onyx Boox Faust 5 (C69HD) Hardware Button Remapper"
-    echo "======================================================================"
-    echo "Select an action for the physical button LONG-PRESS:"
-    echo ""
-    echo "  1) Recent Apps / App Switcher (Recommended)"
-    echo "  2) Full Screen E-Ink Refresh (Clears ghosting)"
-    echo "  3) Take Screenshot"
-    echo "  4) Open E-Ink Refresh Mode Dialog"
-    echo "  5) Return to Home Screen"
-    echo "  6) Toggle A2 Fast Refresh Mode"
-    echo "  7) Disable Long-Press Completely (No action, no error toast)"
-    echo "  8) Revert to Factory Default (Frontlight toggle)"
-    echo ""
-    read -r -p "Enter choice [1-8, Default: 1]: " CHOICE
-    CHOICE="${CHOICE:-1}"
-
-    case "$CHOICE" in
-        1) ACTION="KEYCODE_APP_SWITCH" ;;
-        2) ACTION="fullRefreshScreen" ;;
-        3) ACTION="screenshot" ;;
-        4) ACTION="showRefreshModeDialog" ;;
-        5) ACTION="back_to_home" ;;
-        6) ACTION="toggleA2" ;;
-        7) ACTION="" ;;
-        8) ACTION="toggleFrontLight" ;;
-        *) ACTION="KEYCODE_APP_SWITCH" ;;
-    esac
-fi
-
-# Build JSON payload
-if [ -z "$ACTION" ]; then
-    JSON_PAYLOAD='{"keySet":["KEYCODE_BACK"],"shortPressAction":"","longPressAction":"","repeat":false}'
-    DESC="Disabled (No action)"
-else
-    JSON_PAYLOAD="{\"keySet\":[\"KEYCODE_BACK\"],\"shortPressAction\":\"\",\"longPressAction\":\"$ACTION\",\"repeat\":false}"
-    DESC="$ACTION"
-fi
+case "$LP_CHOICE" in
+    1) LP_ACTION="KEYCODE_APP_SWITCH"; LP_DESC="Recent Apps" ;;
+    2) LP_ACTION="fullRefreshScreen"; LP_DESC="Full Screen Refresh" ;;
+    3) LP_ACTION="screenshot"; LP_DESC="Take Screenshot" ;;
+    4) LP_ACTION="showRefreshModeDialog"; LP_DESC="Refresh Mode Dialog" ;;
+    5) LP_ACTION="back_to_home"; LP_DESC="Home Screen" ;;
+    6) LP_ACTION="toggleA2"; LP_DESC="Toggle A2 Mode" ;;
+    7) LP_ACTION=""; LP_DESC="Standard Back" ;;
+    8) LP_ACTION="toggleFrontLight"; LP_DESC="Factory Default Frontlight" ;;
+    *) LP_ACTION="KEYCODE_APP_SWITCH"; LP_DESC="Recent Apps" ;;
+esac
 
 echo ""
-echo "[*] Applying configuration: $DESC..."
+echo "--- 2. Choose SHORT-PRESS (Single Tap) Action ---"
+echo "  1) Standard Back (Recommended)"
+echo "  2) Full Screen E-Ink Refresh"
+echo "  3) Take Screenshot"
+echo "  4) Return to Home Screen"
+echo "  5) Recent Apps / App Switcher"
+echo "  6) Open E-Ink Refresh Mode Dialog"
+echo ""
+read -r -p "Enter choice [1-6, Default: 1]: " SP_CHOICE
+SP_CHOICE="${SP_CHOICE:-1}"
+
+case "$SP_CHOICE" in
+    1) SP_ACTION=""; SP_DESC="Standard Back" ;;
+    2) SP_ACTION="fullRefreshScreen"; SP_DESC="Full Screen Refresh" ;;
+    3) SP_ACTION="screenshot"; SP_DESC="Take Screenshot" ;;
+    4) SP_ACTION="back_to_home"; SP_DESC="Home Screen" ;;
+    5) SP_ACTION="KEYCODE_APP_SWITCH"; SP_DESC="Recent Apps" ;;
+    6) SP_ACTION="showRefreshModeDialog"; SP_DESC="Refresh Mode Dialog" ;;
+    *) SP_ACTION=""; SP_DESC="Standard Back" ;;
+esac
+
+# Build JSON payload
+JSON_PAYLOAD="{\"keySet\":[\"KEYCODE_BACK\"],\"shortPressAction\":\"$SP_ACTION\",\"longPressAction\":\"$LP_ACTION\",\"repeat\":false}"
+
+echo ""
+echo "[*] Applying configuration..."
+echo "  - Single Tap : $SP_DESC"
+echo "  - Long Press : $LP_DESC"
 
 if [ -z "$RUN_CMD" ]; then
     # Running directly on device
     settings put global KEYCODE_BACK "$JSON_PAYLOAD"
+    if [ -n "$SP_ACTION" ]; then
+        settings put global key_custom_side_key_short_press_enable 1
+    else
+        settings put global key_custom_side_key_short_press_enable 0
+    fi
     am broadcast -a onyx.action.refresh_keymapping >/dev/null 2>&1
     SAVED=$(settings get global KEYCODE_BACK)
 else
     # Running via ADB
     $RUN_CMD "settings put global KEYCODE_BACK '$JSON_PAYLOAD'"
+    if [ -n "$SP_ACTION" ]; then
+        $RUN_CMD "settings put global key_custom_side_key_short_press_enable 1"
+    else
+        $RUN_CMD "settings put global key_custom_side_key_short_press_enable 0"
+    fi
     $RUN_CMD "am broadcast -a onyx.action.refresh_keymapping" >/dev/null 2>&1
     SAVED=$($RUN_CMD "settings get global KEYCODE_BACK")
 fi
@@ -94,7 +117,15 @@ echo ""
 echo "Active Settings.Global configuration:"
 echo "  $SAVED"
 echo ""
-echo "Short press remains standard BACK."
-echo "Long press is now mapped to: $DESC."
-echo "This setting is persistent and survives device reboots."
+echo "• Single Tap : $SP_DESC"
+echo "• Long Press : $LP_DESC"
+echo "• Persistent : Survives device reboots."
+echo "======================================================================"
+echo ""
+echo "[NOTE regarding Double-Press & Screen-Wake]:"
+echo "• Double-Press: Onyx ROM natively supports Short & Long press."
+echo "  For true 3-way multi-press (single, double, hold), install the"
+echo "  open-source 'Key Mapper' app (see README.md)."
+echo "• Screen Wake: Android framework/kernel blocks KEY_BACK wake when asleep."
+echo "  Use the Power button or the built-in touchscreen 'Double-Tap to Wake'."
 echo "======================================================================"
