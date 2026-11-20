@@ -86,5 +86,14 @@ To assign a **third distinct action** to double-press (e.g. Single-Tap = Back, D
 
 ---
 
+## 🙏 Acknowledgments & Credits
+
+Special thanks to **[@7sarus](https://github.com/7sarus)** for their foundational open-source work on the Onyx Boox C69 TWRP device tree:
+- **[7sarus/android_device_onyx_c69](https://github.com/7sarus/android_device_onyx_c69)**
+
+Their detailed hardware documentation and research on the Qualcomm Scuba IoT / Bengal platform (`C69_M_STAR`) provided key insights into the partition structure, hardware keycodes, and input nodes.
+
+---
+
 ## 📄 License
 MIT License. Free to use, modify, and distribute.
