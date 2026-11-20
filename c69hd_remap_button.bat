@@ -153,8 +153,8 @@ echo [NOTE regarding Double-Press & Screen-Wake]:
 echo * Double-Press: Onyx ROM natively supports Short and Long press.
 echo   For true 3-way multi-press (single, double, hold), install the
 echo   open-source 'Key Mapper' app (see README.md).
-echo * Screen Wake & DT2W: Physical button wake (center and side page-turn keys)
-echo   and Double Tap to Wake are available via the 'c69hd-wake' Magisk module.
+echo * Screen Wake: Physical button wake (center and side page-turn keys)
+echo   is available via the 'c69hd-wake' Magisk module.
 echo   See the magisk/ directory in this repo for full installation instructions.
 echo ======================================================================
 echo.

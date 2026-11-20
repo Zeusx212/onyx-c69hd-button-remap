@@ -10,7 +10,7 @@ On the Onyx Boox C69HD, the physical center front button acts as `BACK` on short
 Because this hardware edition has no frontlight LEDs, holding the button triggers an error toast:
 > *"doesn't support frontlight"*
 
-Additionally, the physical buttons and double-tap touch gestures do not wake the screen from sleep on stock firmware.
+Additionally, the physical buttons do not wake the screen from sleep on stock firmware.
 
 ---
 
@@ -43,14 +43,13 @@ adb shell am broadcast -a onyx.action.refresh_keymapping
 
 ---
 
-## ⚡ Part 2: Hardware Screen Wake & Double Tap to Wake (Root / Magisk)
+## ⚡ Part 2: Physical Button Screen Wake (Root / Magisk)
 
 Stock Onyx ROMs have `config_wakeOnBackKeyPress` hardcoded to `false` in `framework-res.apk`, meaning physical buttons cannot wake the device from sleep.
 
 The included **`c69hd-wake`** Magisk module solves this:
 - **Center Button Wake**: Pressing the center button while asleep wakes the device instantly (< 30ms).
 - **Side Page-Turn Button Wake**: Pressing either page-turn button while asleep also wakes the device.
-- **Double Tap to Wake (DT2W)**: Double-tapping the touchscreen while asleep wakes the screen.
 - **Full Compatibility**: When the device is awake, button events pass through normally to Onyx ROM, preserving all single-press and long-press custom mappings.
 
 ### Installing the Magisk Module:
@@ -82,7 +81,7 @@ To assign a **third distinct action** to double-press (e.g. Single-Tap = Back, D
 | `c69hd_remap_button.bat` | Windows | Interactive batch wizard (remap Long-Press & Short-Press) |
 | `c69hd_remap_button.sh` | Linux / macOS / Termux | Interactive shell script (remap Long-Press & Short-Press) |
 | `c69hd_remap_button.py` | Cross-Platform | Interactive Python CLI (remap Long-Press & Short-Press) |
-| `magisk/c69hd-wake.zip` | Android (Magisk) | Flashable Magisk module for Button Wake & DT2W |
+| `magisk/c69hd-wake.zip` | Android (Magisk) | Flashable Magisk module for Physical Button Wake |
 
 ---
 

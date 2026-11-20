@@ -100,8 +100,8 @@ def main():
     print("• Double-Press: Onyx ROM natively supports Short & Long press.")
     print("  To enable true 3-way multi-press (single, double, hold), install the")
     print("  open-source 'Key Mapper' app (see README.md for details).")
-    print("• Screen Wake & DT2W: Physical button wake (center and side page-turn keys)")
-    print("  and Double Tap to Wake are available via the 'c69hd-wake' Magisk module.")
+    print("• Screen Wake: Physical button wake (center and side page-turn keys)")
+    print("  is available via the 'c69hd-wake' Magisk module.")
     print("  See the magisk/ directory in this repo for full installation instructions.")
     print("=" * 70)
 
