@@ -154,7 +154,7 @@ echo * Double-Press: Onyx ROM natively supports Short and Long press.
 echo   For true 3-way multi-press (single, double, hold), install the
 echo   open-source 'Key Mapper' app (see README.md).
 echo * Screen Wake: Android framework/kernel blocks KEY_BACK wake when asleep.
-echo   Use the Power button or the built-in touchscreen 'Double-Tap to Wake'.
+echo   Wake via the top Power button or a magnetic smart cover (Hall sensor).
 echo ======================================================================
 echo.
 pause

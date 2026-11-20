@@ -95,11 +95,12 @@ To have **three distinct actions** on the single physical button (e.g. Single-Ta
 - In Android's window manager policy (`PhoneWindowManager.isWakeKeyWhenScreenOff`), waking on `KEYCODE_BACK` is gated by `config_wakeOnBackKeyPress`, which is hardcoded to `false` in `/system/framework/framework-res.apk`.
 - Because the device runs a non-rooted production build with read-only dm-verity partitions (`/system`), `Generic.kl` and `framework-res.apk` cannot be altered.
 
-### Recommended Screen Wake Alternative:
-The Onyx Boox Faust 5 has built-in **Double-Tap to Wake**:
-- You can wake the device by double-tapping anywhere on the E-Ink touchscreen.
-- Ensure it is enabled in your device settings (`Settings.Secure double_tap_to_wake=1`).
-- Alternatively, use the top physical **Power Button**, which is the designated hardware wake key.
+### Available Screen Wake Methods on Faust 5 (C69HD):
+Because the capacitive touch digitizer and center button are powered down during sleep to preserve battery life, only two wake methods are supported by hardware:
+1. **Physical Power Button**: The top button (`qpnp_pon` key 116) is the primary hardware wake key.
+2. **Magnetic Smart Cover**: Opening a compatible magnetic folio cover activates the built-in Hall sensor (`onyx-hall`), which automatically wakes the device via `KEY_WAKEUP`.
+
+*(Note: Although Android's `Settings.Secure` database contains a residual `double_tap_to_wake=1` flag from AOSP defaults or cloud backup, `mSupportsDoubleTapWakeConfig` and the FocalTech touch gesture driver `fts_ts` (`Reg(0xD0)=0`) are disabled in the ROM to prevent battery drain).*
 
 ---
 

@@ -101,8 +101,8 @@ def main():
     print("  To enable true 3-way multi-press (single, double, hold), install the")
     print("  open-source 'Key Mapper' app (see README.md for details).")
     print("• Screen Wake: Android kernel/framework blocks waking from sleep via")
-    print("  KEY_BACK on non-root builds. Use the Power button or the built-in")
-    print("  touchscreen 'Double-Tap to Wake' gesture to wake the device.")
+    print("  KEY_BACK on non-root builds. Wake via the top Power button or a")
+    print("  magnetic smart cover (Hall sensor).")
     print("=" * 70)
 
 if __name__ == "__main__":
